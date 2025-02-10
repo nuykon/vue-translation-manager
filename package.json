@@ -1,10 +1,10 @@
 {
   "name": "@nuykon/vue-translation-manager",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "description": "Translate strings in your app in an interactive way",
   "main": "index.js",
   "bin": {
-    "@nuykon/v-t-m": "./bin.js"
+    "nuykon-vtm": "./bin.js"
   },
   "publishConfig": {
     "access": "public"
