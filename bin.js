@@ -15,9 +15,15 @@ require('yargs') // eslint-disable-line
       .option('askKey', {
         describe: 'Possibility to edit the auto-generated key'
       })
+      .option('modeType', {
+        describe: 'Key generation mode - translate or transliteration'
+      })
+      .option('maxWordIKey', {
+        describe: 'Maximum number of words in a key'
+      })
   }, (argv) => {
     manager = setUpManager(argv)
-    launchInteractiveTranslationPrompt(argv.askKey)
+    launchInteractiveTranslationPrompt(argv.askKey, argv.modeType, argv.maxWordInKey)
   })
   .command('clean', 'Remove unused translations from translations resource', (yargs) => {
   }, async (argv) => {
@@ -151,7 +157,7 @@ require('yargs') // eslint-disable-line
   })
   .argv
 
-function launchInteractiveTranslationPrompt (askKey) {
+function launchInteractiveTranslationPrompt (askKey, modeType, maxWordInKey) {
   var globPattern = `${manager.getSrcPath()}/**/*.vue`
   var files = glob.sync(globPattern, null)
   var untranslatedComponents = files.filter((file) => containsUntranslatedStrings(file)).map((file) => path.relative(process.cwd(), file))
@@ -177,7 +183,7 @@ function launchInteractiveTranslationPrompt (askKey) {
 
     for (var i = 0; i < strings.length; i++) {
       let str = strings[i]
-      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys)
+      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys, modeType, maxWordInKey)
       usedKeys.push(key)
 
       replacements.push({
@@ -223,7 +229,7 @@ function launchInteractiveTranslationPrompt (askKey) {
           type: 'input',
           message: `[${lang}] Translation for "${textForDisplay}"`,
           name: `${replaceAll(key, '.', '/')}.${lang}`,
-          default: defaultString
+          default: defaultString.trim()
         })
       })
     }
@@ -257,7 +263,7 @@ function launchInteractiveTranslationPrompt (askKey) {
         message: '✨ Translated strings! Do you want to continue?'
       }]).then((answers) => {
         if (!answers.continue) process.exit(0)
-        launchInteractiveTranslationPrompt(askKey)
+        launchInteractiveTranslationPrompt(askKey, modeType, maxWordInKey)
       })
     })
   })

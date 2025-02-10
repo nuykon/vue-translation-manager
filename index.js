@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const translate = require('node-google-translate-skidz')
 const execall = require('execall')
 const glob = require('glob')
 const uniq = require('lodash.uniq')
@@ -132,7 +133,7 @@ TranslationManager.prototype.getStringsForComponent = function (pathToComponent)
     }
   }).filter(Boolean)
 
-  var attributeResults = execall(/\s([a-z]*-)?(title|label|text|caption|placeholder)="([^"]*)"/gm, template)
+  var attributeResults = execall(/\s([a-z]*-)?(title|label|text|caption|placeholder|subtitle)="([^"]*)"/gm, template)
 
   var attributeMatches = attributeResults.map((match) => {
     if (!match.sub[2] || match.sub[2].trim() === '') return
@@ -189,28 +190,59 @@ TranslationManager.prototype.replaceStringsInComponent = function (pathToCompone
   fs.writeFileSync(pathToComponent, contentsAfter)
 }
 
+const translitMap = {'Ё': 'YO', 'Й': 'I', 'Ц': 'TS', 'У': 'U', 'К': 'K', 'Е': 'E', 'Н': 'N', 'Г': 'G', 'Ш': 'SH', 'Щ': 'SCH', 'З': 'Z', 'Х': 'H', 'Ъ': '', 'ё': 'yo', 'й': 'i', 'ц': 'ts', 'у': 'u', 'к': 'k', 'е': 'e', 'н': 'n', 'г': 'g', 'ш': 'sh', 'щ': 'sch', 'з': 'z', 'х': 'h', 'ъ': '', 'Ф': 'F', 'Ы': 'I', 'В': 'V', 'А': 'A', 'П': 'P', 'Р': 'R', 'О': 'O', 'Л': 'L', 'Д': 'D', 'Ж': 'ZH', 'Э': 'E', 'ф': 'f', 'ы': 'i', 'в': 'v', 'а': 'a', 'п': 'p', 'р': 'r', 'о': 'o', 'л': 'l', 'д': 'd', 'ж': 'zh', 'э': 'e', 'Я': 'Ya', 'Ч': 'CH', 'С': 'S', 'М': 'M', 'И': 'I', 'Т': 'T', 'Ь': '', 'Б': 'B', 'Ю': 'YU', 'я': 'ya', 'ч': 'ch', 'с': 's', 'м': 'm', 'и': 'i', 'т': 't', 'ь': '', 'б': 'b', 'ю': 'yu'}
+
+function transliterate (word) {
+  return word.split('').map(function (char) {
+    return translitMap[char] || char
+  }).join('')
+}
+
 /**
  * Generate a suggested key (using dots) based on the given path
  * @param {string} pathToFile Path to the file
  * @param {string} text The text to be translated
  * @param {array} usedKeys Optional, array of keys that have already been used
+ * @param {string} modeType Key generation mode - translate or transliteration
+ * @param {number} maxWordInKey Maximum number of words in a key
  * @returns {string}
  */
-TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys) {
+TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys, modeType = 'translit', maxWordInKey = 4) {
   const ignoreWords = ['src', 'components', 'component', 'source', 'test']
-
-  var p = path.relative(this.rootPath, pathToFile)
-  var prefix = p
+  const mode = ['translit', 'translate'].includes(modeType) ? modeType : 'translit'
+  const p = path.relative(this.rootPath, pathToFile)
+  const prefix = p
     .split('/')
     .filter((part) => ignoreWords.indexOf(part.trim()) < 0)
     .map((key) => key.toLowerCase().split('.')[0])
     .join('.')
 
-  var words = text.trim().split(' ')
-  if (words.length > 4) words = words.slice(0, 3)
+  let preliminaryText = text
+  if (mode === 'translate') {
+    try {
+      const { translation } = await translate({
+        text,
+        source: 'ru',
+        target: 'en'
+      })
+      preliminaryText = translation
+    } catch (e) {
+      console.warn(e)
+      console.log('Сервер не отвечает, возможно капсуль не дает доступ к https://translate.google.com/')
+      console.log('Переключаемся в режим траслитерации')
+    }
+  }
 
-  let word = camelCase(words.join(' ').replace(/[^a-zA-Z ]/g, ''))
+  // eslint-disable-next-line no-useless-escape
+  let words = preliminaryText.replace(/[.,\/#!$%^&*;:{}=\-_`~()'–ъь]/g, '').trim().split(' ')
+  if (words.length > maxWordInKey) words = words.slice(0, maxWordInKey - 1)
+
+  words = words.map(transliterate).filter((cs) => !!cs.length)
+
+  let word = camelCase(words.join(' ').replace(/[^a-zA-Z\d\s]/g, ''))
+
   if (!word) word = Math.floor(Math.random() * 10000)
+
   let proposedKey = await this.getCompatibleKey(`${prefix}.${word}`, usedKeys)
 
   return proposedKey
@@ -323,17 +355,25 @@ TranslationManager.prototype.validate = async function () {
   return missingKeys
 }
 
+function isInteger (value) {
+  return /^\d+$/.test(value)
+}
+
 /**
  * camelCase any string
  * @param {string} text The string to be camelCased
  * @returns {string} theStringInCamelCase
  */
 function camelCase (text) {
+  console.log('camelCase1', text)
   return text
     .trim()
     .split(' ')
     .map((word) => word.toLowerCase())
-    .map((word, i) => (i === 0 ? word : word[0].toUpperCase() + word.substring(1)))
+    .map((word, i) => {
+      console.log('camelCase2', word)
+      return i === 0 || isInteger(word) ? word : word[0].toUpperCase() + word.substring(1)
+    })
     .join('')
 }
 

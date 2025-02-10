@@ -26,6 +26,7 @@
   "author": "Max Gfeller <mg@cyon.ch>",
   "license": "ISC",
   "devDependencies": {
+    "node-google-translate-skidz": "^1.1.2",
     "standard": "^11.0.1",
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
