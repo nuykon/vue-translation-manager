@@ -365,13 +365,11 @@ function isInteger (value) {
  * @returns {string} theStringInCamelCase
  */
 function camelCase (text) {
-  console.log('camelCase1', text)
   return text
     .trim()
     .split(' ')
     .map((word) => word.toLowerCase())
     .map((word, i) => {
-      console.log('camelCase2', word)
       return i === 0 || isInteger(word) ? word : word[0].toUpperCase() + word.substring(1)
     })
     .join('')
