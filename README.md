@@ -1,6 +1,6 @@
 # @nuykon/vue-translation-manager
 
-## This is a fork - https://github.com/cyon/vue-translation-manager , which fixed some bugs and added new functionality, primarily for working with Cyrillic texts (those for initially Russian-language applications)
+This is a fork - https://github.com/cyon/vue-translation-manager , which fixed some bugs and added new functionality, primarily for working with Cyrillic texts (those for initially Russian-language applications)
 
 [![version](https://badgen.net/npm/v/@nuykon/vue-translation-manager)](https://github.com/nuykon/vue-translation-manager)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -111,18 +111,26 @@ is dynamic data inside a text.
 
 ## `translate` command params
 
+
+--ask-key - By default, false, the key will be generated automatically (either by translation from Russian into English(google translate), or by transliteration(Я -> YA)). If you enable this option, the utility will prompt you to enter the key name.
 ```bash
 nuykon-vtm translate --ask-key
 ```
 
+--key-gen-mode - 'translit' - default or 'translate'. the key will be generated automatically - by transliteration(Я -> YA) or by translation from Russian into English(google translate api)
 ```bash
 nuykon-vtm translate --key-gen-mode
 ```
 
+--max-word-in-key - The key is generated from the source text, the option allows you to limit the number of words from which the key will be generated. default - 4 
 ```bash
 nuykon-vtm translate --max-word-in-key
 ```
 
+--enable-message-translate - Enabling this option allows you to automatically translate key values from Russian to English. (google translate api)
 ```bash
 nuykon-vtm translate --enable-message-translate
 ```
+
+If you get the error "code: `ERR_REQUIRE_ESM" when running commands, you need to temporarily remove it from the package.your application's json string is `"type": "module",`
+
