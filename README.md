@@ -9,6 +9,8 @@ This is a fork - https://github.com/cyon/vue-translation-manager , which fixed s
 
 Interactive dictionary generator for internationalization from vue components(sfc).
 
+The utility only works with sfc, which extracts text only from vue templates and replaces them with an i18n.t function call.
+
 ---
 Installation
 ---
