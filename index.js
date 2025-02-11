@@ -203,13 +203,12 @@ function transliterate (word) {
  * @param {string} pathToFile Path to the file
  * @param {string} text The text to be translated
  * @param {array} usedKeys Optional, array of keys that have already been used
- * @param {string} modeType Key generation mode - translate or transliteration
+ * @param {string} keyGenMode Key generation mode - translate or transliteration
  * @param {number} maxWordInKey Maximum number of words in a key
  * @returns {string}
  */
-TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys, modeType = 'translit', maxWordInKey = 4) {
+TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys, keyGenMode, maxWordInKey) {
   const ignoreWords = ['src', 'components', 'component', 'source', 'test']
-  const mode = ['translit', 'translate'].includes(modeType) ? modeType : 'translit'
   const p = path.relative(this.rootPath, pathToFile)
   const prefix = p
     .split('/')
@@ -218,7 +217,7 @@ TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text,
     .join('.')
 
   let preliminaryText = text
-  if (mode === 'translate') {
+  if (keyGenMode === 'translate') {
     try {
       const { translation } = await translate({
         text,
@@ -229,7 +228,6 @@ TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text,
     } catch (e) {
       console.warn(e)
       console.log('Сервер не отвечает, возможно капсуль не дает доступ к https://translate.google.com/')
-      console.log('Переключаемся в режим траслитерации')
     }
   }
 

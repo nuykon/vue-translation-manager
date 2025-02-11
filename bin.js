@@ -6,6 +6,7 @@ const chalk = require('chalk')
 const replaceAll = require('replace-string')
 const inquirer = require('inquirer')
 const Manager = require('./')
+const translate = require('node-google-translate-skidz')
 
 var manager = null
 
@@ -15,15 +16,18 @@ require('yargs') // eslint-disable-line
       .option('askKey', {
         describe: 'Possibility to edit the auto-generated key'
       })
-      .option('modeType', {
+      .option('keyGenMode', {
         describe: 'Key generation mode - translate or transliteration'
       })
       .option('maxWordIKey', {
         describe: 'Maximum number of words in a key'
       })
+      .option('enableMessageTranslate', {
+        describe: 'Translate messages into English'
+      })
   }, (argv) => {
     manager = setUpManager(argv)
-    launchInteractiveTranslationPrompt(argv.askKey, argv.modeType, argv.maxWordInKey)
+    launchInteractiveTranslationPrompt(argv.askKey, argv.keyGenMode, argv.maxWordInKey, argv.enableMessageTranslate)
   })
   .command('clean', 'Remove unused translations from translations resource', (yargs) => {
   }, async (argv) => {
@@ -157,7 +161,13 @@ require('yargs') // eslint-disable-line
   })
   .argv
 
-function launchInteractiveTranslationPrompt (askKey, modeType, maxWordInKey) {
+function launchInteractiveTranslationPrompt (
+  askKey = false,
+  keyGenMode = 'translit',
+  maxWordInKey = 4,
+  enableMessageTranslate = false
+) {
+  const mode = ['translit', 'translate'].includes(keyGenMode) ? keyGenMode : 'translit'
   var globPattern = `${manager.getSrcPath()}/**/*.vue`
   var files = glob.sync(globPattern, null)
   var untranslatedComponents = files.filter((file) => containsUntranslatedStrings(file)).map((file) => path.relative(process.cwd(), file))
@@ -183,7 +193,7 @@ function launchInteractiveTranslationPrompt (askKey, modeType, maxWordInKey) {
 
     for (var i = 0; i < strings.length; i++) {
       let str = strings[i]
-      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys, modeType, maxWordInKey)
+      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys, mode, maxWordInKey)
       usedKeys.push(key)
 
       replacements.push({
@@ -223,13 +233,29 @@ function launchInteractiveTranslationPrompt (askKey, modeType, maxWordInKey) {
         textForDisplay += str.originalString.substring(lastIndex)
         defaultString += str.originalString.substring(lastIndex)
       }
-
-      manager.getLanguages().map((lang) => {
+      let preliminaryText = defaultString.trim()
+      manager.getLanguages().map(async (lang) => {
+        console.log('переводим текст', mode)
+        if (mode === 'translate' && lang === 'en') {
+          console.log('переводим текст', lang)
+          try {
+            const { translation } = await translate({
+              text: preliminaryText,
+              source: 'ru',
+              target: 'en'
+            })
+            preliminaryText = translation
+          } catch (e) {
+            console.warn(e)
+            console.log('Сервер не отвечает, возможно капсуль не дает доступ к https://translate.google.com/')
+            console.log('Переключаемся в режим траслитерации')
+          }
+        }
         questions.push({
           type: 'input',
           message: `[${lang}] Translation for "${textForDisplay}"`,
           name: `${replaceAll(key, '.', '/')}.${lang}`,
-          default: defaultString.trim()
+          default: preliminaryText
         })
       })
     }
@@ -263,7 +289,7 @@ function launchInteractiveTranslationPrompt (askKey, modeType, maxWordInKey) {
         message: '✨ Translated strings! Do you want to continue?'
       }]).then((answers) => {
         if (!answers.continue) process.exit(0)
-        launchInteractiveTranslationPrompt(askKey, modeType, maxWordInKey)
+        launchInteractiveTranslationPrompt(askKey, mode, maxWordInKey, enableMessageTranslate)
       })
     })
   })
