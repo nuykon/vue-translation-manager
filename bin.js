@@ -235,7 +235,6 @@ function launchInteractiveTranslationPrompt (
       }
       let translatedString = defaultString.trim()
       if (enableMessageTranslate) {
-        console.log('переводим текст')
         try {
           const { translation } = await translate({
             text: translatedString,
