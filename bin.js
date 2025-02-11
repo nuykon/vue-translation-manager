@@ -233,29 +233,29 @@ function launchInteractiveTranslationPrompt (
         textForDisplay += str.originalString.substring(lastIndex)
         defaultString += str.originalString.substring(lastIndex)
       }
-      let preliminaryText = defaultString.trim()
-      manager.getLanguages().map(async (lang) => {
-        console.log('переводим текст', mode)
-        if (mode === 'translate' && lang === 'en') {
-          console.log('переводим текст', lang)
-          try {
-            const { translation } = await translate({
-              text: preliminaryText,
-              source: 'ru',
-              target: 'en'
-            })
-            preliminaryText = translation
-          } catch (e) {
-            console.warn(e)
-            console.log('Сервер не отвечает, возможно капсуль не дает доступ к https://translate.google.com/')
-            console.log('Переключаемся в режим траслитерации')
-          }
+      let translatedString = defaultString.trim()
+      if (enableMessageTranslate) {
+        console.log('переводим текст')
+        try {
+          const { translation } = await translate({
+            text: translatedString,
+            source: 'ru',
+            target: 'en'
+          })
+          translatedString = translation
+        } catch (e) {
+          console.warn(e)
+          console.log('Сервер не отвечает, возможно капсуль не дает доступ к https://translate.google.com/')
         }
+      }
+
+      await manager.getLanguages().map(async (lang) => {
+        // const m = await getTranslatedText(defaultString.trim(), lang)
         questions.push({
           type: 'input',
           message: `[${lang}] Translation for "${textForDisplay}"`,
           name: `${replaceAll(key, '.', '/')}.${lang}`,
-          default: preliminaryText
+          default: lang !== 'en' ? defaultString.trim() : translatedString
         })
       })
     }

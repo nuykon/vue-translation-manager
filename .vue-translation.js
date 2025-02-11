@@ -3,6 +3,6 @@ const { JSONAdapter } = require('./')
 
 module.exports = {
   srcPath: path.join(__dirname, 'test/'),
-  adapter: new JSONAdapter({ path: path.join(__dirname, 'messages.json')}),
+  adapter: new JSONAdapter({ path: path.join(__dirname, '/messages.json')}),
   languages: ['ru', 'en']
 }
