@@ -232,7 +232,13 @@ TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text,
   }
 
   // eslint-disable-next-line no-useless-escape
-  let words = preliminaryText.replace(/[.,\/#!$%^&*;:{}=\-_`~()'–ъь]/g, '').trim().split(' ')
+  let words = preliminaryText.replace(/[^a-zA-Zа-яА-ЯёЁ\d\s]/g, '')
+    .replaceAll('ъ', '')
+    .replaceAll('Ъ', '')
+    .replaceAll('ь', '')
+    .replaceAll('Ь', '')
+    .trim()
+    .split(' ')
   if (words.length > maxWordInKey) words = words.slice(0, maxWordInKey - 1)
 
   words = words.map(transliterate).filter((cs) => !!cs.length)
