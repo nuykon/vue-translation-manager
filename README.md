@@ -141,7 +141,7 @@ default - 'src,components,component,source,test'
 nuykon-vtm translate --ignore-words-in-path=myFolder1,myFolder2
 ```
 
-If you get the error "code: `ERR_REQUIRE_ESM" when running commands, you need to temporarily remove it from the package.your application's json string is `"type": "module",`
+If you get the error "code: `ERR_REQUIRE_ESM" when running commands, you need to temporarily remove it from the package.json string is `"type": "module",`
 
 If your application is inside another one and you get an error - command not found: nuykon-vtm
 
