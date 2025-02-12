@@ -143,3 +143,8 @@ nuykon-vtm translate --ignore-words-in-path=myFolder1,myFolder2
 
 If you get the error "code: `ERR_REQUIRE_ESM" when running commands, you need to temporarily remove it from the package.your application's json string is `"type": "module",`
 
+If your application is inside another one and you get an error - command not found: nuykon-vtm
+
+then try the command - `node ./node_modules/@nuykon/vue-translation-manager/bin.js translate`
+
+
