@@ -134,5 +134,12 @@ nuykon-vtm translate --max-word-in-key
 nuykon-vtm translate --enable-message-translate
 ```
 
+--ignore-words-in-path - Exclude words from the path
+
+default - 'src,components,component,source,test'
+```bash
+nuykon-vtm translate --ignore-words-in-path=myFolder1,myFolder2
+```
+
 If you get the error "code: `ERR_REQUIRE_ESM" when running commands, you need to temporarily remove it from the package.your application's json string is `"type": "module",`
 

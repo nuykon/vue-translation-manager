@@ -25,9 +25,18 @@ require('yargs') // eslint-disable-line
       .option('enableMessageTranslate', {
         describe: 'Translate messages into English'
       })
+      .option('ignoreWordsInPath', {
+        describe: 'Exclude words from the path'
+      })
   }, (argv) => {
     manager = setUpManager(argv)
-    launchInteractiveTranslationPrompt(argv.askKey, argv.keyGenMode, argv.maxWordInKey, argv.enableMessageTranslate)
+    launchInteractiveTranslationPrompt(
+      argv.askKey,
+      argv.keyGenMode,
+      argv.maxWordInKey,
+      argv.enableMessageTranslate,
+      argv.ignoreWordsInPath
+    )
   })
   .command('clean', 'Remove unused translations from translations resource', (yargs) => {
   }, async (argv) => {
@@ -165,7 +174,8 @@ function launchInteractiveTranslationPrompt (
   askKey = false,
   keyGenMode = 'translit',
   maxWordInKey = 4,
-  enableMessageTranslate = false
+  enableMessageTranslate = false,
+  ignoreWordsInPath = ''
 ) {
   const mode = ['translit', 'translate'].includes(keyGenMode) ? keyGenMode : 'translit'
   var globPattern = `${manager.getSrcPath()}/**/*.vue`
@@ -193,7 +203,7 @@ function launchInteractiveTranslationPrompt (
 
     for (var i = 0; i < strings.length; i++) {
       let str = strings[i]
-      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys, mode, maxWordInKey)
+      var key = await manager.getSuggestedKey(filePath, str.string, usedKeys, mode, maxWordInKey, ignoreWordsInPath)
       usedKeys.push(key)
 
       replacements.push({
@@ -288,7 +298,7 @@ function launchInteractiveTranslationPrompt (
         message: '✨ Translated strings! Do you want to continue?'
       }]).then((answers) => {
         if (!answers.continue) process.exit(0)
-        launchInteractiveTranslationPrompt(askKey, mode, maxWordInKey, enableMessageTranslate)
+        launchInteractiveTranslationPrompt(askKey, mode, maxWordInKey, enableMessageTranslate, ignoreWordsInPath)
       })
     })
   })

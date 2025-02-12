@@ -205,13 +205,17 @@ function transliterate (word) {
  * @param {array} usedKeys Optional, array of keys that have already been used
  * @param {string} keyGenMode Key generation mode - translate or transliteration
  * @param {number} maxWordInKey Maximum number of words in a key
+ * @param {string} ignoreWordsInPath Exclude words from the path
  * @returns {string}
  */
-TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys, keyGenMode, maxWordInKey) {
-  const ignoreWords = ['src', 'components', 'component', 'source', 'test']
+TranslationManager.prototype.getSuggestedKey = async function (pathToFile, text, usedKeys, keyGenMode, maxWordInKey, ignoreWordsInPath) {
+  let ignoreWords = ['src', 'components', 'component', 'source', 'test']
+  if (ignoreWordsInPath) {
+    ignoreWords = ignoreWordsInPath.split(',')
+  }
   const p = path.relative(this.rootPath, pathToFile)
   const prefix = p
-    .split('/')
+    .split(path.sep)
     .filter((part) => ignoreWords.indexOf(part.trim()) < 0)
     .map((key) => key.toLowerCase().split('.')[0])
     .join('.')
